@@ -11,7 +11,7 @@ if (DESKTOP_APP_USE_PACKAGED)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(OPUS opus)
 
-    target_include_directories(external_opus INTERFACE ${OPUS_INCLUDE_DIRS})
+    target_include_directories(external_opus INTERFACE ${OPUS_INCLUDEDIR})
 else()
     target_include_directories(external_opus SYSTEM
     INTERFACE
