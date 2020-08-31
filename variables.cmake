@@ -4,46 +4,48 @@
 # For license and copyright information please follow this link:
 # https://github.com/desktop-app/legal/blob/master/LEGAL
 
-option(DESKTOP_APP_LOTTIE_USE_CACHE "Use caching in lottie animations." ON)
-option(DESKTOP_APP_DISABLE_DBUS_INTEGRATION "Disable all code for D-Bus integration (Linux only)." OFF)
+set(no_special_target 0)
+if (DESKTOP_APP_SPECIAL_TARGET STREQUAL "")
+    set(no_special_target 1)
+endif()
 
-option(DESKTOP_APP_USE_GLIBC_WRAPS "Use wraps for new GLIBC features." OFF)
+set(linux_special_target 0)
 if (LINUX AND NOT DESKTOP_APP_SPECIAL_TARGET STREQUAL "")
-    set(DESKTOP_APP_USE_GLIBC_WRAPS ON)
+    set(linux_special_target 1)
 endif()
 
-option(DESKTOP_APP_USE_PACKAGED "Find libraries using CMake instead of exact paths." ON)
-if (NOT DESKTOP_APP_SPECIAL_TARGET STREQUAL "")
-    set(DESKTOP_APP_USE_PACKAGED OFF)
-endif()
-
-option(DESKTOP_APP_DISABLE_SPELLCHECK "Disable spellcheck library." OFF)
+set(osx_special_target 0)
 if (DESKTOP_APP_SPECIAL_TARGET STREQUAL "osx")
-    set(DESKTOP_APP_DISABLE_SPELLCHECK ON)
+    set(osx_special_target 1)
 endif()
 
-option(DESKTOP_APP_DISABLE_CRASH_REPORTS "Disable crash report generation." ${DESKTOP_APP_USE_PACKAGED})
-option(DESKTOP_APP_USE_PACKAGED_RLOTTIE "Find rlottie using CMake instead of bundled one." ${DESKTOP_APP_USE_PACKAGED})
-option(DESKTOP_APP_USE_PACKAGED_EXPECTED "Find expected using CMake instead of bundled one." ${DESKTOP_APP_USE_PACKAGED})
-option(DESKTOP_APP_USE_PACKAGED_VARIANT "Find mapbox-variant using CMake instead of bundled one." ${DESKTOP_APP_USE_PACKAGED})
-option(DESKTOP_APP_USE_PACKAGED_GSL "Find GSL using CMake instead of bundled one." ${DESKTOP_APP_USE_PACKAGED})
-option(DESKTOP_APP_USE_PACKAGED_QRCODE "Find qr-code-generator library using CMake instead of bundled one." OFF)
-option(DESKTOP_APP_USE_PACKAGED_FONTS "Use preinstalled fonts instead of bundled one." ${DESKTOP_APP_USE_PACKAGED})
-
-option(DESKTOP_APP_ENABLE_IPO_OPTIMIZATIONS "Enable IPO build optimizations." OFF)
-if (DESKTOP_APP_ENABLE_IPO_OPTIMIZATIONS AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    message(WARNING "Clang cannot build Qt applications with IPO enabled due to upstream bug: https://bugreports.qt.io/browse/QTBUG-61710.")
-    set(DESKTOP_APP_ENABLE_IPO_OPTIMIZATIONS OFF)
-endif()
-
-option(DESKTOP_APP_USE_HUNSPELL_ONLY "Disable system spellchecker and use bundled Hunspell only. (For debugging purposes)" OFF)
-option(DESKTOP_APP_USE_ENCHANT "Use Enchant instead of bundled Hunspell. (Linux only)" OFF)
-
+set(disable_autoupdate 0)
 if (DESKTOP_APP_SPECIAL_TARGET STREQUAL ""
     OR DESKTOP_APP_SPECIAL_TARGET STREQUAL "uwp"
     OR DESKTOP_APP_SPECIAL_TARGET STREQUAL "macstore")
     set(disable_autoupdate 1)
 endif()
+
+option(DESKTOP_APP_LOTTIE_USE_CACHE "Use caching in lottie animations." ON)
+option(DESKTOP_APP_DISABLE_DBUS_INTEGRATION "Disable all code for D-Bus integration (Linux only)." OFF)
+option(DESKTOP_APP_DISABLE_WEBRTC_INTEGRATION "Disable all code for WebRTC integration." OFF)
+option(DESKTOP_APP_USE_GLIBC_WRAPS "Use wraps for new GLIBC features." ${linux_special_target})
+option(DESKTOP_APP_USE_PACKAGED "Find libraries using CMake instead of exact paths." ${no_special_target})
+option(DESKTOP_APP_USE_PACKAGED_LAZY "Bundle recommended Qt plugins for self-contained packages. (Linux only)" OFF)
+option(DESKTOP_APP_USE_PACKAGED_LAZY_PLATFORMTHEMES "Bundle recommended Qt platform themes for self-contained packages. (Linux only)" ${DESKTOP_APP_USE_PACKAGED_LAZY})
+option(DESKTOP_APP_USE_PACKAGED_FFMPEG_STATIC "Link ffmpeg statically in packaged mode." OFF)
+option(DESKTOP_APP_DISABLE_SPELLCHECK "Disable spellcheck library." ${osx_special_target})
+option(DESKTOP_APP_DISABLE_CRASH_REPORTS "Disable crash report generation." ${no_special_target})
+option(DESKTOP_APP_DISABLE_AUTOUPDATE "Disable autoupdate." ${disable_autoupdate})
+option(DESKTOP_APP_USE_HUNSPELL_ONLY "Disable system spellchecker and use bundled Hunspell only. (For debugging purposes)" OFF)
+option(DESKTOP_APP_USE_ENCHANT "Use Enchant instead of bundled Hunspell. (Linux only)" OFF)
+set(DESKTOP_APP_QTWAYLANDCLIENT_PRIVATE_HEADERS "" CACHE STRING "QtWaylandClient headers location.")
+
+set(dont_bundle_fonts 0)
+if (DESKTOP_APP_USE_PACKAGED AND NOT DESKTOP_APP_USE_PACKAGED_LAZY)
+    set(dont_bundle_fonts 1)
+endif()
+option(DESKTOP_APP_USE_PACKAGED_FONTS "Use preinstalled fonts instead of bundled one." ${dont_bundle_fonts})
 
 set(add_hunspell_library 0)
 if ((WIN32
@@ -81,7 +83,7 @@ else()
             report_bad_special_target()
         endif()
     endif()
-    if (NOT DESKTOP_APP_USE_PACKAGED OR DESKTOP_APP_ENABLE_IPO_OPTIMIZATIONS)
+    if (DESKTOP_APP_SPECIAL_TARGET)
         set(CMAKE_AR "gcc-ar")
         set(CMAKE_RANLIB "gcc-ranlib")
         set(CMAKE_NM "gcc-nm")

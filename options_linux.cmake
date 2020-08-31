@@ -6,11 +6,11 @@
 
 target_compile_options(common_options
 INTERFACE
+    -fPIC
     $<IF:$<CONFIG:Debug>,,-fno-strict-aliasing>
     -pipe
     -Wall
     -W
-    -fPIC
     -Wno-unused-variable
     -Wno-unused-parameter
     -Wno-unused-function
@@ -24,23 +24,39 @@ INTERFACE
     -Wno-stringop-overflow
     -Wno-maybe-uninitialized
     -Wno-error=class-memaccess
+    $<$<NOT:$<COMPILE_LANGUAGE:C>>:-Wno-register>
 )
-if (NOT DESKTOP_APP_USE_PACKAGED)
+
+if (DESKTOP_APP_SPECIAL_TARGET)
     target_compile_options(common_options
     INTERFACE
         $<IF:$<CONFIG:Debug>,,-Ofast>
         -Werror
     )
+
     target_link_options(common_options
     INTERFACE
         $<IF:$<CONFIG:Debug>,,-Ofast>
     )
-endif()
-if (build_linux32)
-    target_compile_options(common_options INTERFACE -g0)
-    target_link_options(common_options INTERFACE -g0)
-elseif (NOT DESKTOP_APP_USE_PACKAGED)
-    target_compile_options(common_options INTERFACE $<IF:$<CONFIG:Debug>,,-g -flto>)
-    target_link_options(common_options INTERFACE $<IF:$<CONFIG:Debug>,,-g -flto -fuse-linker-plugin>)
+
+    if (build_linux32)
+        target_compile_options(common_options INTERFACE -g0)
+        target_link_options(common_options INTERFACE -g0)
+    else()
+        target_compile_options(common_options INTERFACE $<IF:$<CONFIG:Debug>,,-g -flto>)
+        target_link_options(common_options INTERFACE $<IF:$<CONFIG:Debug>,,-g -flto -fuse-linker-plugin>)
+    endif()
 endif()
 
+if (DESKTOP_APP_USE_PACKAGED)
+    find_library(ATOMIC_LIBRARY atomic)
+else()
+    find_library(ATOMIC_LIBRARY libatomic.a)
+endif()
+
+if (ATOMIC_LIBRARY)
+    target_link_libraries(common_options
+    INTERFACE
+        ${ATOMIC_LIBRARY}
+    )
+endif()

@@ -4,24 +4,33 @@
 # For license and copyright information please follow this link:
 # https://github.com/desktop-app/legal/blob/master/LEGAL
 
-if (DESKTOP_APP_USE_PACKAGED_RLOTTIE)
-    add_library(external_rlottie INTERFACE IMPORTED GLOBAL)
-    add_library(desktop-app::external_rlottie ALIAS external_rlottie)
+add_library(external_rlottie INTERFACE IMPORTED GLOBAL)
+add_library(desktop-app::external_rlottie ALIAS external_rlottie)
 
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(RLOTTIE REQUIRED rlottie)
-    target_include_directories(external_rlottie INTERFACE ${RLOTTIE_INCLUDE_DIRS})
-    target_link_libraries(external_rlottie INTERFACE ${RLOTTIE_LIBRARIES})
-else()
-    add_library(external_rlottie OBJECT)
-    add_library(desktop-app::external_rlottie ALIAS external_rlottie)
-    init_target(external_rlottie "(external)")
+if (DESKTOP_APP_USE_PACKAGED)
+    find_package(rlottie QUIET)
+
+    if (rlottie_FOUND)
+        target_link_libraries(external_rlottie INTERFACE rlottie::rlottie)
+    else()
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(RLOTTIE IMPORTED_TARGET rlottie)
+
+        if (RLOTTIE_FOUND)
+            target_link_libraries(external_rlottie INTERFACE PkgConfig::RLOTTIE)
+        endif()
+    endif()
+endif()
+
+if (NOT rlottie_FOUND AND NOT RLOTTIE_FOUND)
+    add_library(external_rlottie_bundled STATIC)
+    init_target(external_rlottie_bundled "(external)")
 
     get_filename_component(src_loc . REALPATH)
     set(rlottie_loc ${third_party_loc}/rlottie)
 
-    target_sources(external_rlottie PRIVATE ${src_loc}/config/config.h)
-    nice_target_sources(external_rlottie ${rlottie_loc}
+    target_sources(external_rlottie_bundled PRIVATE ${src_loc}/config/config.h)
+    nice_target_sources(external_rlottie_bundled ${rlottie_loc}
     PRIVATE
         inc/rlottie.h
         inc/rlottie_capi.h
@@ -99,16 +108,15 @@ else()
         src/vector/vtaskqueue.h
     )
 
-    target_compile_definitions(external_rlottie
+    target_compile_definitions(external_rlottie_bundled
     PUBLIC
         LOT_BUILD
     PRIVATE
         _USE_MATH_DEFINES
-        LOTTIE_DISABLE_ARM_NEON
         "RAPIDJSON_ASSERT=(void)"
     )
 
-    target_include_directories(external_rlottie
+    target_include_directories(external_rlottie_bundled
     PUBLIC
         ${rlottie_loc}/inc
     PRIVATE
@@ -119,11 +127,23 @@ else()
         ${rlottie_loc}/src/vector/freetype
     )
 
-    if (WIN32)
-        target_compile_options(external_rlottie
+    if (LINUX)
+        target_link_libraries(external_rlottie_bundled
+        PRIVATE
+            pthread
+        )
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        target_compile_options(external_rlottie_bundled
         PRIVATE
             /w44244 # 'initializing': conversion from 'double' to 'float'
             /w44251 # needs to have dll-interface to be used by clients of class
         )
     endif()
+
+    target_link_libraries(external_rlottie
+    INTERFACE
+        external_rlottie_bundled
+    )
 endif()
