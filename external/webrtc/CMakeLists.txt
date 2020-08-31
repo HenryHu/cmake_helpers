@@ -76,7 +76,7 @@ if (APPLE)
     )
 endif()
 foreach (lib ${webrtc_libs})
-    list(APPEND webrtc_libs_list "${webrtc_build_loc}/${lib}${webrtc_lib_suffix}")
+    list(APPEND webrtc_libs_list "${DESKTOP_APP_WEBRTC_LOCATION}/../out/$<CONFIG>/${lib}${webrtc_lib_suffix}")
 endforeach()
 
 if (WIN32)
