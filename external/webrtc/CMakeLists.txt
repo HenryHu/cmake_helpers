@@ -99,4 +99,5 @@ target_link_libraries(external_webrtc
 INTERFACE
     ${webrtc_libs_list}
     desktop-app::external_openssl
+    jpeg
 )
