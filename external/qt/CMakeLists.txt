@@ -34,6 +34,7 @@ if (DESKTOP_APP_USE_PACKAGED)
         find_library(Qt5ThemeSupport_LIBRARY
         NAMES
             Qt5ThemeSupport
+        REQUIRED
         )
 
         find_path(Qt5ThemeSupport_INCLUDE_DIR
@@ -43,6 +44,7 @@ if (DESKTOP_APP_USE_PACKAGED)
             ${Qt5Gui_INCLUDE_DIRS}
         PATH_SUFFIXES
             QtThemeSupport/${Qt5Gui_VERSION}
+        REQUIRED
         )
 
         target_link_libraries(external_qt
@@ -335,17 +337,13 @@ else()
             wayland-egl
             wayland-cursor
             wayland-client
-            xcb-shm
-            xcb-xfixes
-            xcb-render
             xkbcommon
             xkbcommon-x11
+            Xi
+            Xext
+            Xfixes
             Xrender
             ffi
-            icutu
-            icui18n
-            icuuc
-            icudata
         )
         if (DESKTOP_APP_USE_GLIBC_WRAPS)
             target_link_libraries(external_qt
@@ -356,6 +354,7 @@ else()
         endif()
         target_link_libraries(external_qt
         INTERFACE
+            desktop-app::external_zlib
             ICE
             SM
             fontconfig
