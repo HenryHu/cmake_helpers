@@ -7,11 +7,11 @@
 add_library(external_webrtc INTERFACE IMPORTED GLOBAL)
 add_library(desktop-app::external_webrtc ALIAS external_webrtc)
 
-if (DESKTOP_APP_USE_PACKAGED)
+if (0) # DESKTOP_APP_USE_PACKAGED
     find_package(tg_owt REQUIRED)
     target_link_libraries(external_webrtc INTERFACE tg_owt::tg_owt)
 else()
-    set(webrtc_loc ${libs_loc}/tg_owt/src)
+    set(webrtc_loc ${DESKTOP_APP_WEBRTC_LOCATION})
     set(webrtc_build_loc ${libs_loc}/tg_owt/out/$<CONFIG>)
 
     target_compile_definitions(external_webrtc
