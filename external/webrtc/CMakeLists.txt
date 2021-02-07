@@ -98,6 +98,7 @@ else()
     INTERFACE
         ${webrtc_libs_list}
         desktop-app::external_openssl
-        jpeg
+        desktop-app::external_jpeg
+        desktop-app::external_opus
     )
 endif()
