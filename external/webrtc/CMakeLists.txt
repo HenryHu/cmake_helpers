@@ -11,7 +11,7 @@ if (DESKTOP_APP_USE_PACKAGED)
     find_package(tg_owt REQUIRED)
     target_link_libraries(external_webrtc INTERFACE tg_owt::tg_owt)
 else()
-    set(webrtc_loc ${DESKTOP_APP_WEBRTC_LOCATION})
+    set(webrtc_loc ${libs_loc}/tg_owt/src)
     set(webrtc_build_loc ${libs_loc}/tg_owt/out/$<CONFIG>)
 
     target_compile_definitions(external_webrtc
@@ -75,7 +75,7 @@ else()
         )
     endif()
     foreach (lib ${webrtc_libs})
-        list(APPEND webrtc_libs_list "${DESKTOP_APP_WEBRTC_LOCATION}/../out/$<CONFIG>/${lib}${webrtc_lib_suffix}")
+        list(APPEND webrtc_libs_list "${webrtc_build_loc}/${lib}${webrtc_lib_suffix}")
     endforeach()
 
     if (WIN32)
